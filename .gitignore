@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Local model caches
+hf_cache/
+torch_cache/
+
 # User-specific files
 *.rsuser
 *.suo

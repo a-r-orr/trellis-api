@@ -44,32 +44,32 @@ class Gen3D(Resource):
         except Exception as e:
             return {'message': f'Failed to read image file: {e}'}, 400
         
-        # Move the pipeline instance to the gpu before processing.
-        current_app.model_pipeline.to("cuda")
         try:
+            # Move the pipeline instance to the gpu before processing.
+            current_app.model_pipeline.to("cuda")
+
             # Generate the 3D model
             glb_data = create_3d_model(input_image, current_app.model_pipeline)
+
+            if glb_data is None:
+                return {'message': '3D generation failed on the server.'}, 500
+            
+            # Prepare the GLB file for sending in the response
+            buffer = io.BytesIO()
+            # The glb object from postprocessing_utils can export directly to a file-like object
+            glb_data.export(buffer, file_type='glb')
+            buffer.seek(0)
+
+            return send_file(
+                buffer, 
+                mimetype='model/gltf-binary',
+                as_attachment=True,
+                download_name='generated_model.glb'
+            )
         except Exception as e:
             print(e)
             return {'message': f'Failed to generate 3d file: {e}'}, 500
-        
-        if glb_data is None:
-            return {'message': '3D generation failed on the server.'}, 500
-
-        # Return the pipeline instance to the cpu after processing to free up VRAM.
-        current_app.model_pipeline.to("cpu")
-
-        # Prepare the GLB file for sending in the response
-        buffer = io.BytesIO()
-        # The glb object from postprocessing_utils can export directly to a file-like object
-        glb_data.export(buffer, file_type='glb')
-        buffer.seek(0)
-
-        torch.cuda.empty_cache()
-
-        return send_file(
-            buffer, 
-            mimetype='model/gltf-binary',
-            as_attachment=True,
-            download_name='generated_model.glb'
-        )
+        finally:
+            # Return the pipeline instance to the cpu after processing to free up VRAM.
+            current_app.model_pipeline.to("cpu")
+            torch.cuda.empty_cache()

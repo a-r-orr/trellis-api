@@ -1,0 +1,15 @@
+# Git and IDE files
+.git/
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Pytest cache
+.pytest_cache/
+tests/
+
+# Local environment
+.env

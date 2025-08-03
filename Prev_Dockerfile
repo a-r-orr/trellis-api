@@ -1,0 +1,32 @@
+# 1 Docker Image
+FROM pytorch/pytorch:2.7.1-cuda12.8-cudnn9-runtime
+
+# 2 Working Directory and non-root user
+WORKDIR /usr/src/app
+RUN useradd --create-home appuser
+USER appuser
+# Add the user's local bin directory to the PATH environment variable
+ENV PATH="/home/appuser/.local/bin:${PATH}"
+
+# 3 Copy necessary folders
+COPY --chown=appuser:appuser extensions/ /tmp/extensions/
+COPY --chown=appuser:appuser trellis/ ./trellis
+COPY --chown=appuser:appuser configs/ ./configs
+COPY --chown=appuser:appuser dataset_toolkits/ ./dataset_toolkits
+
+# 4 Install dependencies
+COPY --chown=appuser:appuser requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 5 Copy application source code
+COPY --chown=appuser:appuser src/ ./src
+
+# 6 Copy startup file
+COPY --chown=appuser:appuser helper_script.sh ./
+RUN chmod +x helper_script.sh
+
+# 7 Expose PORT 8080 for Gunicorn
+EXPOSE 8080
+
+# 8 Command to run application
+CMD ["./helper_script.sh"]

@@ -1,0 +1,68 @@
+# 1. Use a generic NVIDIA CUDA 12.8 development image based on Ubuntu 24.04
+FROM nvidia/cuda:12.8.0-devel-ubuntu24.04
+
+# 2. Set environment variables to prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+# 3. Install Python, pip, and essential build tools for Ubuntu 24.04
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    python-is-python3 \
+    git \
+    build-essential \
+    libx11-6 \
+    libgl1 \
+    libglib2.0-0 \
+    libjpeg-dev \
+    zlib1g-dev \
+    libpng-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 4. Create a virtual environment
+RUN python3 -m venv /opt/venv
+# Note: The PATH is now set here, before pip installs, so it uses the venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# 5. Install PyTorch and Pillow-SIMD into the virtual environment
+RUN pip install --no-cache-dir \
+    torch==2.7.1+cu128 \
+    torchvision==0.22.1+cu128 \
+    torchaudio==2.7.1+cu128 \
+    --index-url https://download.pytorch.org/whl/cu128
+RUN pip uninstall -y pillow || true && pip install --no-cache-dir pillow-simd
+
+# 6. Create a non-root user and set up the app environment
+WORKDIR /usr/src/app
+RUN useradd --create-home appuser
+
+# --- THIS IS THE FIX ---
+# Change ownership of the virtual environment to the new user
+RUN chown -R appuser:appuser /opt/venv
+# --------------------
+
+# Set environment variables for building custom extensions
+ENV CUDA_HOME=/usr/local/cuda
+ENV TORCH_CUDA_ARCH_LIST="12.0"
+ENV NVIDIA_DISABLE_REQUIRE=1
+
+USER appuser
+
+# 7. Copy and run the setup script (now appuser can write to the venv)
+COPY --chown=appuser:appuser extensions/vox2seq/ /tmp/extensions/vox2seq/
+COPY --chown=appuser:appuser setup.docker.sh .
+RUN chmod +x setup.docker.sh && ./setup.docker.sh
+
+# 8. Copy application code and startup script
+COPY --chown=appuser:appuser src/ ./src
+COPY --chown=appuser:appuser trellis/ ./trellis
+COPY --chown=appuser:appuser configs/ ./configs
+COPY --chown=appuser:appuser helper_script.sh ./
+RUN chmod +x helper_script.sh
+
+# 9. Expose port and run
+EXPOSE 8080
+CMD ["./helper_script.sh"]

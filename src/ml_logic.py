@@ -1,13 +1,11 @@
 import os
-# import io
-
 # Set environment variables before importing torch and other libraries
 os.environ['SPCONV_ALGO'] = 'auto'
 os.environ['TORCH_CUDA_ARCH_LIST'] = '12.0' 
 
-# from werkzeug.datastructures import FileStorage
-# from PIL import Image
 import torch
+from trellis.pipelines import TrellisImageTo3DPipeline
+from trellis.utils import postprocessing_utils
 
 # Import TRELLIS-specific libraries
 from trellis.pipelines import TrellisImageTo3DPipeline
@@ -18,15 +16,11 @@ from trellis.utils import postprocessing_utils
 
 def get_pipeline():
     """Loads and returns the TRELLIS pipeline, loading only if it hasn't been loaded yet."""
-    # global pipeline
-    
-    # if pipeline is None:
     print("Loading TRELLIS model for the first time...")
     torch.cuda.empty_cache()
     # Load the pipeline from Hugging Face
     pipeline = TrellisImageTo3DPipeline.from_pretrained("microsoft/TRELLIS-image-large")
-    # Move the pipeline to the GPU
-    # pipeline.cuda()
+
     print("Model loaded successfully.")
 
     return pipeline
