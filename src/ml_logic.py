@@ -11,9 +11,6 @@ from trellis.utils import postprocessing_utils
 from trellis.pipelines import TrellisImageTo3DPipeline
 from trellis.utils import postprocessing_utils
 
-# Global variable to hold the pipeline
-# pipeline = None
-
 def get_pipeline():
     """Loads and returns the TRELLIS pipeline, loading only if it hasn't been loaded yet."""
     print("Loading TRELLIS model for the first time...")
@@ -44,7 +41,7 @@ def create_3d_model(image, gen_pipeline):
                 "cfg_strength": 7.5,
             },
             slat_sampler_params={
-                "steps": 30,
+                "steps": 20,
                 "cfg_strength": 3,
             },
         )
