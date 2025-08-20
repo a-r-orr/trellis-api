@@ -1,10 +1,5 @@
 import os
 import io
-
-# Set environment variables before importing torch and other libraries
-os.environ['SPCONV_ALGO'] = 'auto'
-os.environ['TORCH_CUDA_ARCH_LIST'] = '12.0' 
-
 from flask import send_file, current_app
 from flask_restx import Resource, Namespace
 from werkzeug.datastructures import FileStorage

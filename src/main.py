@@ -1,16 +1,13 @@
-import os
-import io
-
-# Set environment variables before importing torch and other libraries
-os.environ['SPCONV_ALGO'] = 'auto'
-os.environ['TORCH_CUDA_ARCH_LIST'] = '12.0' 
-
+import warnings
 from flask import Flask
 from flask_restx import Api
 from flask_cors import CORS
 
 from .ml_logic import get_pipeline
 from .api import ns_3d
+
+warnings.filterwarnings("ignore", message="TORCH_CUDA_ARCH_LIST is not set.*")
+warnings.filterwarnings("ignore", message="xFormers is not available*")
 
 def create_app():
     """Creates and configures the Flask app"""
@@ -22,7 +19,7 @@ def create_app():
 
     # Initialise the API
     api = Api(app, version='1.0', title='Image to 3D API', 
-            description='Returns a 3D Model (.glb) generated from a provided PNG image.')
+              description='Returns a 3D Model (.glb) generated from a provided PNG image.')
 
     # Add the 3D Namespace
     api.add_namespace(ns_3d)

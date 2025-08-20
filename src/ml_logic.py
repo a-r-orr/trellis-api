@@ -1,8 +1,4 @@
 import os
-# Set environment variables before importing torch and other libraries
-os.environ['SPCONV_ALGO'] = 'auto'
-os.environ['TORCH_CUDA_ARCH_LIST'] = '12.0' 
-
 import torch
 from trellis.pipelines import TrellisImageTo3DPipeline
 from trellis.utils import postprocessing_utils
@@ -17,7 +13,7 @@ def get_pipeline():
     torch.cuda.empty_cache()
     # Load the pipeline from Hugging Face
     pipeline = TrellisImageTo3DPipeline.from_pretrained("microsoft/TRELLIS-image-large")
-
+    # pipeline.to("cuda")
     print("Model loaded successfully.")
 
     return pipeline
@@ -52,7 +48,6 @@ def create_3d_model(image, gen_pipeline):
             outputs['gaussian'][0],
             outputs['mesh'][0],
             simplify=0.95,      # Ratio of triangles to remove
-            texture_size=1024,  # Size of the texture for the GLB
         )
         torch.cuda.empty_cache()
         return glb
